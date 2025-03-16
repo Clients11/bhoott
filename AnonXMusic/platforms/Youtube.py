@@ -7,10 +7,11 @@ import requests
 import yt_dlp
 from pyrogram.enums import MessageEntityType
 from pyrogram.types import Message
-from youtubesearchpython.__future__ import VideosSearch, CustomSearch
-
+from youtubesearchpython.__future__ import VideosSearch
+from config import YTPROXY_URL as YTPROXY
 from AnonXMusic.utils.database import is_on_off
 from AnonXMusic.utils.formatters import time_to_seconds
+
 from AnonXMusic import LOGGER
 
 
@@ -18,21 +19,18 @@ import os
 import glob
 import random
 import logging
-from config import YTPROXY_URL as YTPROXY
 
 def cookie_txt_file():
-    try:
-        folder_path = f"{os.getcwd()}/cookies"
-        filename = f"{os.getcwd()}/cookies/logs.csv"
-        txt_files = glob.glob(os.path.join(folder_path, '*.txt'))
-        if not txt_files:
-            raise FileNotFoundError("No .txt files found in the specified folder.")
-        cookie_txt_file = random.choice(txt_files)
-        with open(filename, 'a') as file:
-            file.write(f'Choosen File : {cookie_txt_file}\n')
-        return f"""cookies/{str(cookie_txt_file).split("/")[-1]}"""
-    except:
-        return None
+    folder_path = f"{os.getcwd()}/cookies"
+    filename = f"{os.getcwd()}/cookies/logs.csv"
+    txt_files = glob.glob(os.path.join(folder_path, '*.txt'))
+    if not txt_files:
+        raise FileNotFoundError("No .txt files found in the specified folder.")
+    cookie_txt_file = random.choice(txt_files)
+    with open(filename, 'a') as file:
+        file.write(f'Choosen File : {cookie_txt_file}\n')
+    return f"""cookies/{str(cookie_txt_file).split("/")[-1]}"""
+
 
 
 async def check_file_size(link):
@@ -92,12 +90,6 @@ class YouTubeAPI:
         self.status = "https://www.youtube.com/oembed?url="
         self.listbase = "https://youtube.com/playlist?list="
         self.reg = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
-        self.dl_stats = {
-            "total_requests": 0,
-            "okflix_downloads": 0,
-            "cookie_downloads": 0,
-            "existing_files": 0
-        }
 
     async def _get_video_details(self, link: str, limit: int = 20) -> Union[dict, None]:
         """Helper function to get video details with duration limit and error handling"""
@@ -422,9 +414,6 @@ class YouTubeAPI:
             Returns:
                 str or None: File path if download successful, None otherwise
             """
-            self.dl_stats["total_requests"] += 1
-            err = False
-            
             try:
                 # Check if file already exists
                 for ext in ['mp3', 'm4a', 'webm']:
@@ -433,7 +422,7 @@ class YouTubeAPI:
                         return fpath
 
                 # Get download information from proxy
-                res = requests.get(f"{YTPROXY}/{vid_id}", timeout=300)
+                res = requests.get(f"{YTPROXY}/{vid_id}", timeout=30)
                 response = res.json()
 
                 if response['status'] == 'success':
@@ -446,38 +435,20 @@ class YouTubeAPI:
                             for chunk in data.iter_content(chunk_size=8192):
                                 if chunk:
                                     f.write(chunk)
-                        self.dl_stats["okflix_downloads"] += 1
-                        print(f"Downloaded from okflix (okflix: {self.dl_stats['okflix_downloads']}, Total: {self.dl_stats['total_requests']})")
                         return fpath
                 else:
-                    LOGGER(__name__).error(f"Proxy returned error status: {response}")
-                    err = True
+                    LOGGER(__name__).error(f"Proxy returned error status: {response.get('error', 'Unknown')}")
+                    return None
 
             except requests.exceptions.RequestException as e:
                 LOGGER(__name__).error(f"Network error while downloading: {str(e)}")
-                err = True
+                return None
             except json.JSONDecodeError as e:
                 LOGGER(__name__).error(f"Invalid response from proxy: {str(e)}")
-                err = True
+                return None
             except Exception as e:
                 LOGGER(__name__).error(f"Error in downloading song: {str(e)}")
-                err = True
-            
-            if err:
-                ydl_optssx = {
-                    "format": "bestaudio/best",
-                    "outtmpl": "downloads/%(id)s.%(ext)s",
-                    "geo_bypass": True,
-                    "nocheckcertificate": True,
-                    "quiet": True,
-                    "cookiefile" : cookie_txt_file(),
-                    "no_warnings": True,
-                }
-                x = yt_dlp.YoutubeDL(ydl_optssx)
-                info = x.extract_info(link, False)
-                self.dl_stats["cookie_downloads"] += 1
-                print(f"Downloaded from cookies (cookies: {self.dl_stats['cookie_downloads']} , Total: {self.dl_stats['total_requests']})")
-                return info['url']
+                return None
 
         def video_dl():
             ydl_optssx = {
@@ -579,4 +550,3 @@ class YouTubeAPI:
             downloaded_file = await loop.run_in_executor(None, lambda:audio_dl(vid_id))
         return downloaded_file, direct
             
-        
