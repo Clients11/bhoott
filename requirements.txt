@@ -28,4 +28,3 @@ uvloop
 yt-dlp
 youtube-search
 youtube-search-python
-asyncio==0.4.1
