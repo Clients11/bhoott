@@ -22,10 +22,10 @@ DURATION_LIMIT_MIN = int(getenv("DURATION_LIMIT", 120))
 YTPROXY_URL = getenv("YTPROXY_URL", 'https://yt.okflix.top/api') ## E.G https://yt.okflix
 
 # Chat id of a group for logging bot's activities
-LOGGER_ID = int(getenv("LOGGER_ID", "-1001902619247"))
+LOGGER_ID = int(getenv("LOGGER_ID", "-1002133369721"))
 
 # Get this value from @FallenxBot on Telegram by /id
-OWNER_ID = int(getenv("OWNER_ID", "5050578106"))
+OWNER_ID = int(getenv("OWNER_ID", "5111294407"))
 
 ## Fill these variables if you're deploying on heroku.
 # Your heroku app name
@@ -46,7 +46,7 @@ SUPPORT_CHANNEL = getenv("SUPPORT_CHANNEL", "https://Ace_networkop")
 SUPPORT_CHAT = getenv("SUPPORT_CHAT", "https://t.me/+JoSPjg4d91QzMWNl")
 
 # Set this to True if you want the assistant to automatically leave chats after an interval
-AUTO_LEAVING_ASSISTANT = bool(getenv("AUTO_LEAVING_ASSISTANT", False))
+AUTO_LEAVING_ASSISTANT = bool(getenv("AUTO_LEAVING_ASSISTANT", True))
 
 PRIVATE_BOT_MODE = getenv("PRIVATE_BOT_MODE", None)
 PRIVATE_BOT_MODE_MEM = int(getenv("PRIVATE_BOT_MODE_MEM", 0))
